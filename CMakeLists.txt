@@ -8,7 +8,7 @@ set(SINGLE_FILE_TARGETS_DIR ${CMAKE_SOURCE_DIR}/SingleFileTargets)
 ## === GTest Setup ===
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
-add_subdirectory("external/googletest-1.17.0")
+add_subdirectory("external/googletest")
 
 ## === Folder Executables ===
 
