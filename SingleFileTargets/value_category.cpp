@@ -8,17 +8,32 @@
 #include <cxxabi.h>
 #endif
 
-template <typename T> struct is_prvalue : std::true_type {};
-template <typename T> struct is_prvalue<T&> : std::false_type {};
-template <typename T> struct is_prvalue<T&&> : std::false_type {};
+/*
+ * Legacy Implementation
+ * template <typename T> struct is_prvalue : std::true_type {};
+ * template <typename T> struct is_prvalue<T&> : std::false_type {};
+ * template <typename T> struct is_prvalue<T&&> : std::false_type {};
+ *
+ * template <typename T> struct is_lvalue : std::false_type {};
+ * template <typename T> struct is_lvalue<T&> : std::true_type {};
+ * template <typename T> struct is_lvalue<T&&> : std::false_type {};
+ *
+ * template <typename T> struct is_xvalue : std::false_type {};
+ * template <typename T> struct is_xvalue<T&> : std::false_type {};
+ * template <typename T> struct is_xvalue<T&&> : std::true_type {};
+ */
 
-template <typename T> struct is_lvalue : std::false_type {};
-template <typename T> struct is_lvalue<T&> : std::true_type {};
-template <typename T> struct is_lvalue<T&&> : std::false_type {};
+template <typename T> inline constexpr bool is_prvalue = std::true_type {};
+template <typename T> inline constexpr bool is_prvalue = std::false_type {};
+template <typename T> inline constexpr bool is_prvalue = std::false_type {};
 
-template <typename T> struct is_xvalue : std::false_type {};
-template <typename T> struct is_xvalue<T&> : std::false_type {};
-template <typename T> struct is_xvalue<T&&> : std::true_type {};
+template <typename T> inline constexpr bool is_lvalue = std::false_type {};
+template <typename T> inline constexpr bool is_lvalue = std::true_type {};
+template <typename T> inline constexpr bool is_lvalue = std::false_type {};
+
+template <typename T> inline constexpr bool is_xvalue = std::false_type {};
+template <typename T> inline constexpr bool is_xvalue = std::false_type {};
+template <typename T> inline constexpr bool is_xvalue = std::true_type {};
 
 #ifdef __GNUC__
 namespace cxxabi {
@@ -26,13 +41,11 @@ namespace cxxabi {
 	std::string getTypeName() {
 		int status;
 		std::string typeName = typeid(T).name();
-		const auto demangledName =
-			abi::__cxa_demangle(typeName.c_str(), nullptr, nullptr, &status);
-		if (status == 0) {
-			typeName = demangledName;
-			free(demangledName);
-		}
-		return typeName;
+		std::unique_ptr<char, void(*)(void*)> demangleName(
+			abi::__cxa_demangle(typeName.c_str(), nullptr, nullptr, &status),
+			std::free
+		);
+		return status == 0 ? demangleName.get() : typeName;
 	}
 }
 #endif
@@ -62,7 +75,7 @@ namespace pretty_func {
 		} ();
 
 		template <typename T>
-		static constexpr auto typeNameStorage = [] {
+		static constexpr auto typeNameStorage = [] () constexpr {
 			std::array<char, getRawTypeName<T>().size() - typeNameFormat.junk_total + 1> result {};
 			std::copy_n(getRawTypeName<T>().data() + typeNameFormat.junk_leading, result.size() - 1, result.data());
 			return result;
@@ -91,17 +104,17 @@ int main() {
 	std::cout << b << std::endl;
 	std::cout << r << std::endl;
 
-	static_assert(is_prvalue<decltype(42)>::value);
-	static_assert(is_lvalue<decltype((a))>::value);
-	static_assert(is_xvalue<decltype(std::move(a))>::value);
+	static_assert(is_prvalue<decltype(42)>());
+	static_assert(is_lvalue<decltype((a))>());
+	static_assert(is_xvalue<decltype(std::move(a))>());
 
 	// static_assert(std::is_lvalue_reference<decltype((b))>::value);
 	static_assert(std::is_lvalue_reference_v<decltype(b)>);
-	static_assert(is_lvalue<decltype((b))>::value);
+	static_assert(is_lvalue<decltype((b))>());
 
 	// static_assert(std::is_rvalue_reference<decltype(r)>::value);
 	static_assert(std::is_rvalue_reference_v<decltype(r)>);
-	static_assert(is_lvalue<decltype((r))>::value);
+	static_assert(is_lvalue<decltype((r))>());
 
 #ifdef __GNUC__
 	{
