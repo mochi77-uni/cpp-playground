@@ -11,3 +11,6 @@ add_executable(module_test module_test/main.cpp)
 enable_module(module_test)
 target_link_libraries(module_test PRIVATE module_test_math)
 add_dependencies(module_test module_test_math)
+
+add_executable(embed_test embed_test/main.cpp)
+target_link_libraries(embed_test PRIVATE stdc++exp)
