@@ -24,16 +24,16 @@
  */
 
 template <typename T> inline constexpr bool is_prvalue = std::true_type {};
-template <typename T> inline constexpr bool is_prvalue = std::false_type {};
-template <typename T> inline constexpr bool is_prvalue = std::false_type {};
+template <typename T> inline constexpr bool is_prvalue<T&> = std::false_type {};
+template <typename T> inline constexpr bool is_prvalue<T&&> = std::false_type {};
 
 template <typename T> inline constexpr bool is_lvalue = std::false_type {};
-template <typename T> inline constexpr bool is_lvalue = std::true_type {};
-template <typename T> inline constexpr bool is_lvalue = std::false_type {};
+template <typename T> inline constexpr bool is_lvalue<T&> = std::true_type {};
+template <typename T> inline constexpr bool is_lvalue<T&&> = std::false_type {};
 
 template <typename T> inline constexpr bool is_xvalue = std::false_type {};
-template <typename T> inline constexpr bool is_xvalue = std::false_type {};
-template <typename T> inline constexpr bool is_xvalue = std::true_type {};
+template <typename T> inline constexpr bool is_xvalue<T&> = std::false_type {};
+template <typename T> inline constexpr bool is_xvalue<T&&> = std::true_type {};
 
 #ifdef __GNUC__
 namespace cxxabi {
@@ -104,17 +104,17 @@ int main() {
 	std::cout << b << std::endl;
 	std::cout << r << std::endl;
 
-	static_assert(is_prvalue<decltype(42)>());
-	static_assert(is_lvalue<decltype((a))>());
-	static_assert(is_xvalue<decltype(std::move(a))>());
+	static_assert(is_prvalue<decltype(42)>);
+	static_assert(is_lvalue<decltype((a))>);
+	static_assert(is_xvalue<decltype(std::move(a))>);
 
 	// static_assert(std::is_lvalue_reference<decltype((b))>::value);
 	static_assert(std::is_lvalue_reference_v<decltype(b)>);
-	static_assert(is_lvalue<decltype((b))>());
+	static_assert(is_lvalue<decltype((b))>);
 
 	// static_assert(std::is_rvalue_reference<decltype(r)>::value);
 	static_assert(std::is_rvalue_reference_v<decltype(r)>);
-	static_assert(is_lvalue<decltype((r))>());
+	static_assert(is_lvalue<decltype((r))>);
 
 #ifdef __GNUC__
 	{
