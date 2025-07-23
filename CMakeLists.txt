@@ -44,3 +44,7 @@ endif ()
 if (TARGET span_test)
     target_link_libraries(span_test PRIVATE python3)
 endif ()
+
+if (TARGET boost_url_test)
+    target_link_libraries(boost_url_test PRIVATE boost_url-mt)
+endif()
