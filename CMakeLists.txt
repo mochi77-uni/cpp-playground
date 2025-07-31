@@ -7,6 +7,8 @@ set(CMAKE_CXX_STANDARD 26)
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 add_subdirectory("external/googletest")
 
+find_package(PkgConfig REQUIRED)
+
 ## === Include cmake utilities ===
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(utils)
@@ -47,4 +49,10 @@ endif ()
 
 if (TARGET boost_url_test)
     target_link_libraries(boost_url_test PRIVATE boost_url-mt)
-endif()
+endif ()
+
+if (TARGET libxml2_test)
+    pkg_check_modules(LIBXML2 REQUIRED libxml-2.0)
+    target_include_directories(libxml2_test PRIVATE ${LIBXML2_INCLUDE_DIRS})
+    target_link_libraries(libxml2_test PRIVATE ${LIBXML2_LIBRARIES})
+endif ()
